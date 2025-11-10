@@ -25,10 +25,10 @@ print(torch.cuda.get_device_name(0))
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(device)
 
-from google.colab import drive
-drive.mount('/content/drive')
+# from google.colab import drive
+# drive.mount('/content/drive')
 
-csv_path = '/content/drive/MyDrive/rupa/archive/labeled_anomalies.csv'
+csv_path = './archive/labeled_anomalies.csv'
 # csv_path = r'C:\Users\skhandaker\OneDrive - Oklahoma City University\Documents\Anomaly Detection Paper\rupa\archive\labeled_anomalies.csv'
 
 df = pd.read_csv(csv_path)
@@ -37,7 +37,7 @@ m_files = [f"{chan_id}.npy" for chan_id in df.loc[df['spacecraft']=='MSL', 'chan
 
 print(m_files)
 
-test_dir = '/content/drive/MyDrive/rupa/archive/data/data/test'
+test_dir = './archive/data/data/test'
 # test_dir = r'C:\Users\skhandaker\OneDrive - Oklahoma City University\Documents\Anomaly Detection Paper\rupa\archive\data\data\test'
 
 # m_files = sorted(f for f in os.listdir(test_dir) if f.endswith('.npy') and f.startswith('M'))

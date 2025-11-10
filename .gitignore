@@ -1,0 +1,3 @@
+# Ignore the proactive anomaly detection script
+proactive_anomaly_detection.py
+archive.zip

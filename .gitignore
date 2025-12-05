@@ -1,3 +1,7 @@
-# Ignore the proactive anomaly detection script
+# ignore the proactive anomaly detection script
 # proactive_anomaly_detection.py
 archive.zip
+.ipynb_checkpoints/
+data/
+image001.png
+labeled_anomalies.csv

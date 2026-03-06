@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[34]:
+# In[1]:
 
 
 import os
 os.environ["CUDA_LAUNCH_BLOCKING"] = "1"
 
 
-# In[35]:
+# In[3]:
 
 
 import numpy as np
@@ -28,46 +28,50 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(device)
 
 
-# In[36]:
+# In[5]:
 
 
-# csv_path = '/content/drive/MyDrive/rupa/archive/labeled_anomalies.csv'
-csv_path = r'C:\Users\skhandaker\OneDrive - Oklahoma City University\Documents\Anomaly Detection Paper\rupa\archive\labeled_anomalies.csv'
+# # csv_path = '/content/drive/MyDrive/rupa/archive/labeled_anomalies.csv'
+# csv_path = r'C:\Users\skhandaker\OneDrive - Oklahoma City University\Documents\Anomaly Detection Paper\rupa\archive\labeled_anomalies.csv'
 
-df = pd.read_csv(csv_path)
+# df = pd.read_csv(csv_path)
 
-print(df["spacecraft"].unique())
+# print(df["spacecraft"].unique())
 
-m_files = [f"{chan_id}.npy" for chan_id in df.loc[df['spacecraft']=='SMAP', 'chan_id']]
+# m_files = [f"{chan_id}.npy" for chan_id in df.loc[df['spacecraft']=='MSL', 'chan_id']]
 
-print(m_files)
+# print(m_files)
 
 
-# In[37]:
+# In[7]:
 
 
 # test_dir = '/content/drive/MyDrive/rupa/archive/data/data/test'
-test_dir = r'C:\Users\skhandaker\OneDrive - Oklahoma City University\Documents\Anomaly Detection Paper\rupa\archive\data\data\test'
+# test_dir = r'C:\Users\skhandaker\OneDrive - Oklahoma City University\Documents\Anomaly Detection Paper\rupa\archive\data\data\test'
+test_dir = r'C:\Users\skhandaker\Documents\OmniAnomaly-master\OmniAnomaly-master\ServerMachineDataset\test'
 
-# m_files = sorted(f for f in os.listdir(test_dir) if f.endswith('.npy') and f.startswith('M'))
+m_files = sorted(f for f in os.listdir(test_dir))
 
-data_list = [np.load(os.path.join(test_dir, fname)) for fname in m_files]
+print(m_files)
 
+# data_list = [np.load(os.path.join(test_dir, fname)) for fname in m_files]
+data_list = [np.loadtxt(os.path.join(test_dir, fname), delimiter=',') for fname in m_files]
 X = np.concatenate(data_list, axis=0)
 
 print("Concatenated shape (rows):", X.shape)
 
 
-# In[38]:
+# In[9]:
 
 
-test_dir = r'C:\Users\skhandaker\OneDrive - Oklahoma City University\Documents\Anomaly Detection Paper\rupa\archive\data\data\test'
+# test_dir = r'C:\Users\skhandaker\OneDrive - Oklahoma City University\Documents\Anomaly Detection Paper\rupa\archive\data\data\test'
+test_dir = r'C:\Users\skhandaker\Documents\OmniAnomaly-master\OmniAnomaly-master\ServerMachineDataset\test'
 
 data_list = []
 
 for fname in m_files:
     file_path = os.path.join(test_dir, fname)
-    arr = np.load(file_path)
+    arr = np.loadtxt(file_path, delimiter=',')
     chan_id = fname[:-4]
     chan_ids = np.full((arr.shape[0], 1), chan_id)
     row_numbers = np.arange(arr.shape[0]).reshape(-1, 1)
@@ -80,13 +84,13 @@ X = np.vstack(data_list)
 print(X)
 
 
-# In[39]:
+# In[11]:
 
 
-print(X)
+print(X.shape)
 
 
-# In[40]:
+# In[13]:
 
 
 # all_rows = []
@@ -98,7 +102,7 @@ print(X)
 # combined = np.concatenate(all_rows, axis=0).astype(np.float32)
 
 
-df = pd.DataFrame(X[:, :25], dtype=np.float32)
+df = pd.DataFrame(X[:, :38], dtype=np.float32)
 unique_embeddings = df.drop_duplicates()
 
 print("Unique embeddings:", len(unique_embeddings))
@@ -108,33 +112,33 @@ print(type(df))
 print(type(unique_embeddings))
 
 
-# In[41]:
+# In[15]:
 
 
 print(unique_embeddings)
 
 
-# In[42]:
+# In[17]:
 
 
 print(df)
 
 
-# In[43]:
+# In[19]:
 
 
 GPT_CONFIG = {
-  "vocab_size": 62222, # Vocabulary size
+  "vocab_size": 710000, # Vocabulary size
   "context_length": 64, # Context length
-  "emb_dim": 25, # Embedding dimension
-  "n_heads": 5, # Number of attention heads
+  "emb_dim": 38, # Embedding dimension
+  "n_heads": 2, # Number of attention heads
   "n_layers": 12, # Number of layers
   "drop_rate": 0.1, # Dropout rate
   "qkv_bias": False # Query-Key-Value bias
 }
 
 
-# In[44]:
+# In[21]:
 
 
 class MultiHeadAttention(nn.Module):
@@ -174,7 +178,7 @@ class MultiHeadAttention(nn.Module):
   return context_vec
 
 
-# In[45]:
+# In[23]:
 
 
 class GELU(nn.Module):
@@ -185,7 +189,7 @@ class GELU(nn.Module):
     return 0.5 * x * (1 + torch.tanh(torch.sqrt(torch.tensor(2.0 / torch.pi)) * (x + 0.044715 * torch.pow(x, 3))))
 
 
-# In[46]:
+# In[25]:
 
 
 class FeedForward(nn.Module):
@@ -197,7 +201,7 @@ class FeedForward(nn.Module):
     return self.layers(x)
 
 
-# In[47]:
+# In[27]:
 
 
 class LayerNorm(nn.Module):
@@ -213,7 +217,7 @@ class LayerNorm(nn.Module):
     return self.scale * norm_x + self.shift
 
 
-# In[48]:
+# In[29]:
 
 
 class TransformerBlock(nn.Module):
@@ -238,7 +242,7 @@ class TransformerBlock(nn.Module):
     return x
 
 
-# In[49]:
+# In[31]:
 
 
 c_unique_embeddings = unique_embeddings.values
@@ -257,7 +261,7 @@ def get_embedding_ids(batch):
     return ids
 
 
-# In[50]:
+# In[33]:
 
 
 class GPTModel(nn.Module):
@@ -275,12 +279,9 @@ class GPTModel(nn.Module):
 
   def forward(self, in_idx):
     global device
-    # print("in_idx: ", in_idx)
     batch_size, seq_len, _ = in_idx.shape
-    # print("batch_size: ", batch_size)
-    # print("seq_len: ", seq_len)
     in_idx = get_embedding_ids(in_idx)
-    # print("new in_idx: ", in_idx)
+
     in_idx = torch.from_numpy(in_idx).long().to(device)
 
     tok_embeds = self.tok_emb(in_idx)
@@ -293,7 +294,7 @@ class GPTModel(nn.Module):
     return logits
 
 
-# In[51]:
+# In[35]:
 
 
 train_ratio = 0.90
@@ -302,7 +303,7 @@ train_data = X[:split_idx]
 val_data = X[split_idx:]
 
 
-# In[52]:
+# In[37]:
 
 
 print(type(train_data))
@@ -311,7 +312,7 @@ print(train_data)
 print(val_data)
 
 
-# In[53]:
+# In[39]:
 
 
 class GPTDatasetV1(Dataset):
@@ -331,7 +332,7 @@ class GPTDatasetV1(Dataset):
     return self.input_ids[idx], self.target_ids[idx]
 
 
-# In[54]:
+# In[41]:
 
 
 def create_dataloader_v1(txt, batch_size=4, max_length=256, stride=128, shuffle=True, drop_last=True, num_workers=0):
@@ -340,15 +341,15 @@ def create_dataloader_v1(txt, batch_size=4, max_length=256, stride=128, shuffle=
   return dataloader
 
 
-# In[55]:
+# In[108]:
 
 
-train_numeric = train_data[:, :25].astype(np.float32)
-val_numeric = val_data[:, :25].astype(np.float32)
+train_numeric = train_data[:, :38].astype(np.float32)
+val_numeric = val_data[:, :38].astype(np.float32)
 
 train_loader = create_dataloader_v1(
   train_numeric,
-  batch_size=256,
+  batch_size=32,
   max_length=GPT_CONFIG["context_length"],
   stride=GPT_CONFIG["context_length"],
   drop_last=True,
@@ -358,7 +359,7 @@ train_loader = create_dataloader_v1(
 
 val_loader = create_dataloader_v1(
   val_numeric,
-  batch_size=256,
+  batch_size=32,
   max_length=GPT_CONFIG["context_length"],
   stride=GPT_CONFIG["context_length"],
   drop_last=False,
@@ -367,7 +368,7 @@ val_loader = create_dataloader_v1(
 )
 
 
-# In[56]:
+# In[110]:
 
 
 def calc_loss_batch(input_batch, target_emb_batch, model, device):
@@ -383,7 +384,7 @@ def calc_loss_batch(input_batch, target_emb_batch, model, device):
     return loss
 
 
-# In[57]:
+# In[112]:
 
 
 def calc_loss_loader(data_loader, model, device, num_batches=None):
@@ -405,7 +406,7 @@ def calc_loss_loader(data_loader, model, device, num_batches=None):
   return total_loss / num_batches
 
 
-# In[58]:
+# In[114]:
 
 
 def evaluate_model(model, train_loader, val_loader, device, eval_iter):
@@ -417,7 +418,7 @@ def evaluate_model(model, train_loader, val_loader, device, eval_iter):
   return train_loss, val_loss
 
 
-# In[59]:
+# In[116]:
 
 
 def train_model_simple(model, train_loader, val_loader, optimizer, device, num_epochs, eval_freq, eval_iter):
@@ -442,7 +443,7 @@ def train_model_simple(model, train_loader, val_loader, optimizer, device, num_e
   return train_losses, val_losses, track_tokens_seen
 
 
-# In[60]:
+# In[118]:
 
 
 torch.manual_seed(42)
@@ -460,31 +461,29 @@ train_losses, val_losses, tokens_seen = train_model_simple(
 )
 
 
-# In[61]:
+# In[120]:
 
 
-import ast
-csv_path = r'C:\Users\skhandaker\OneDrive - Oklahoma City University\Documents\Anomaly Detection Paper\rupa\archive\labeled_anomalies.csv'
-df = pd.read_csv(csv_path)
+# import ast
+# csv_path = r'C:\Users\skhandaker\OneDrive - Oklahoma City University\Documents\Anomaly Detection Paper\rupa\archive\labeled_anomalies.csv'
+label_dir = r'C:\Users\skhandaker\Documents\OmniAnomaly-master\OmniAnomaly-master\ServerMachineDataset\test_label'
+m_files = sorted(f for f in os.listdir(label_dir))
+
+print(m_files)
+# df = pd.read_csv(csv_path)
 
 anomaly_masks = {}
 
-for index, row in df.iterrows():
-    print(index)
-    print(row)
-    chan = row["chan_id"]
-    num_values = row["num_values"]
-    intervals = ast.literal_eval(row["anomaly_sequences"])
-
-    mask = np.zeros(num_values, dtype=bool)
-
-    for start, end in intervals:
-        mask[start:end+1] = True
-
-    anomaly_masks[chan] = mask
+for fname in m_files:
+    chan_id = os.path.basename(fname).split('.')[0]
+    current_file_path = os.path.join(label_dir, fname)
+    df = pd.read_csv(current_file_path, header=None, names=["label"])
+    mask = df["label"].astype(bool).to_numpy()
+    anomaly_masks[chan_id] = mask
+print(anomaly_masks)
 
 
-# In[ ]:
+# In[122]:
 
 
 context = GPT_CONFIG["context_length"]
@@ -496,10 +495,10 @@ dists, uncertainties, expecteds, y_targets = [], [], [], []
 with torch.no_grad():
     for t in range(len(val_data) - context - forecast_horizon):
     # for t in range(5):
-        init_seq = val_data[t : t+context, :25].astype(np.float32)
+        init_seq = val_data[t : t+context, :38].astype(np.float32)
         init_seq = init_seq[np.newaxis]
         init_seq = torch.tensor(init_seq, device=device)
-        true_seq = val_data[t+context : t+context+forecast_horizon, :25].astype(np.float32)
+        true_seq = val_data[t+context : t+context+forecast_horizon, :38].astype(np.float32)
 
         # print(pred_emb)
         predicted_embs = []
@@ -516,8 +515,8 @@ with torch.no_grad():
             init_seq = torch.cat([init_seq, next_emb], dim=1)[:, -context:, :]
         dist = np.linalg.norm(predicted_embs - true_seq)
         
-        chan_id = val_data[t, 25]
-        row_indices = val_data[t+context : t+context+forecast_horizon, 26].astype(int)
+        chan_id = val_data[t, 38]
+        row_indices = val_data[t+context : t+context+forecast_horizon, 39].astype(int)
         mask = anomaly_masks[chan_id]
         window_is_anomaly = mask[row_indices].any()
         
@@ -536,10 +535,10 @@ for m in model.modules():
 with torch.no_grad():
     for t in range(len(val_data) - context - forecast_horizon):
     # for t in range(5):
-        init_seq = val_data[t : t+context, :25].astype(np.float32)
+        init_seq = val_data[t : t+context, :38].astype(np.float32)
         init_seq = init_seq[np.newaxis]
         init_seq = torch.tensor(init_seq, device=device)
-        true_seq = val_data[t+context : t+context+forecast_horizon, :25].astype(np.float32)
+        true_seq = val_data[t+context : t+context+forecast_horizon, :38].astype(np.float32)
 
         # print(pred_emb)
         predicted_embs = []
@@ -569,7 +568,7 @@ u_norm = (u_tensor - u_tensor.min()) / (u_tensor.max() - u_tensor.min())
 e_norm = (e_tensor - e_tensor.min()) / (e_tensor.max() - e_tensor.min())
 
 y_preds = d_norm + u_norm + e_norm
-s_t = d_norm + u_norm + e_norm
+st = d_norm + u_norm + e_norm
 z_t = s_t / (3 ** 0.5)
 normal = Normal(0, 1)
 p_t = 1 - normal.cdf(z_t)
@@ -578,7 +577,7 @@ y_preds = y_preds.detach().cpu().numpy()
 print(y_preds)
 
 
-# In[ ]:
+# In[123]:
 
 
 from sklearn import metrics
@@ -801,7 +800,7 @@ def return_scores(evaluator):
     return result_f1, prec, rec, result_f1_pak, pre_pak, rec_pak, result_f1_comp, pre_comp, rec_comp, result_f1_range, pre_range, rec_range
 
 
-# In[ ]:
+# In[124]:
 
 
 y_preds = np.asarray(y_preds, dtype=int)
@@ -825,6 +824,12 @@ print("Recall-c:", recall_c)
 print("F1-r (Range):", f1_r)
 print("Precision-r:", precision_r)
 print("Recall-r:", recall_r)
+
+
+# In[125]:
+
+
+print("Total anomalies in targets:", np.sum(y_targets))
 
 
 # In[ ]:

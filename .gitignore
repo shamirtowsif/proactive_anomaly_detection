@@ -5,3 +5,9 @@ archive.zip
 data/
 image001.png
 labeled_anomalies.csv
+
+RANSynCoders-main.zip
+archive/
+RANSynCoders-main/
+OmniAnomaly/
+__pycache__/
